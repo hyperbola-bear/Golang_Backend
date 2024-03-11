@@ -2,14 +2,12 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 
 	db "example.com/golang_backend/db/sqlc"
 	"github.com/gin-gonic/gin"
 )
-
 
 
 type AddTeacherStudentsRequest struct {
@@ -23,6 +21,10 @@ func (server *Server) addTeacherStudents(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
+	if (len(req.Students) == 0) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "students array cannot be empty"})
+		return
+	}
 	arg := db.AddTeacherStudentsParams{
 		Teacher:  req.Teacher,
 		Students: req.Students,
@@ -32,24 +34,28 @@ func (server *Server) addTeacherStudents(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "students added successfully"})
+	ctx.JSON(http.StatusNoContent, gin.H{"message": "students added successfully"})
 }
 
-type GetTeacherStudentsRequest struct {
-	Teacher string `form:"teacher" binding:"required"`
-}
+// type GetTeacherStudentsRequest struct {
+// 	Teacher string `form:"teacher" binding:"required"`
+// }
 
 func (server *Server) getTeachersStudents(ctx *gin.Context) {
-	var req GetTeacherStudentsRequest
+	// var req GetTeacherStudentsRequest
 	teacherEmails := ctx.QueryArray("teacher")
 	
-	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
+	// if err := ctx.ShouldBindQuery(&req); err != nil {
+	// 	ctx.JSON(http.StatusBadRequest, errorResponse(err))
+	// 	return
+	// }
 	students, err := server.store.GetTeachersStudents(context.Background(), teacherEmails)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	if students.Students == nil{
+		ctx.JSON(http.StatusOK, gin.H{"students": []string{}})
 		return
 	}
 	ctx.JSON(http.StatusOK, students)
@@ -73,13 +79,12 @@ func (server *Server) getRecipientStudents(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	fmt.Println("students: ", students)
+	
 	notification := req.Notification
 	whitespaceSplit := strings.Fields(notification)
 	for _, word := range whitespaceSplit {
 		if strings.HasPrefix(word, "@") {
 			student := word[1:]
-			fmt.Println("@student: ", student)
 			students = append(students, student)
 		}
 	}
@@ -88,7 +93,6 @@ func (server *Server) getRecipientStudents(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	fmt.Println("suspended student: ", suspendedStudents)
 	suspensionMap := make(map[string]bool)
 	for _, student := range suspendedStudents {
 		suspensionMap[student] = true

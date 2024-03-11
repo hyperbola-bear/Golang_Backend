@@ -36,12 +36,12 @@ func (store *Store) ExecTx(ctx context.Context, fn func(*Queries) error) error {
 }
 
 type AddTeacherStudentsParams struct {
-	Teacher string `json:"teacher"`
-	Students []string `json:"students"`
+	Teacher string `json:"teacher" binding:"required"` 
+	Students []string `json:"students" binding:"required"`
 }
 
 type ReturnTeacherStudentResult struct {
-	Students []string `json:"students"`
+	Students []string `json:"students" binding:"required"`
 }
 
 func (store *Store) AddTeacherStudents(ctx context.Context, arg AddTeacherStudentsParams)  error {
@@ -54,9 +54,7 @@ func (store *Store) AddTeacherStudents(ctx context.Context, arg AddTeacherStuden
 			})
 			if err != nil {
 				return err
-			} else {
-				fmt.Println("Added student: ", student)
-			}
+			} 
 		}
 		return err
 	})

@@ -2,31 +2,48 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
+	"example.com/golang_backend/util"
 	"github.com/stretchr/testify/require"
 )
-func TestAddTeacherStudents(t *testing.T) {
+type TeacherTwoStudent struct {
+	Teacher   string   `json:"teacher"`
+	Students []string `json:"students"`
+}
+func CreateRandomTeacherTwoStudent(t *testing.T) TeacherTwoStudent {
 	store := NewStore(testDB)
-	fmt.Println("store: ", store)
 	arg := AddTeacherStudentsParams{
-		Teacher: "teacher1",
-		Students: []string{"student1", "student2"},
+		Teacher: util.RandomEmail(),
+		Students: []string{util.RandomEmail(), util.RandomEmail()},
 	}
+	require.NotEmpty(t, arg.Teacher)
+	require.NotEmpty(t, arg.Students)
 	err := store.AddTeacherStudents(context.Background(), arg)
 	require.NoError(t, err)
+	var teacherTwoStudent TeacherTwoStudent
+	teacherTwoStudent.Teacher = arg.Teacher
+	teacherTwoStudent.Students = arg.Students
+	return teacherTwoStudent
 }
+func TestAddTeacherStudents(t *testing.T) {
+	CreateRandomTeacherTwoStudent(t)
+}
+
+// cannot enforce required tag in the struct
+// func TestAddTeacherStudentsInvalidTeacher(t *testing.T) {
+// 	store := NewStore(testDB)
+// 	arg := AddTeacherStudentsParams{
+// 		Teacher: "",
+// 		Students: []string{"student1", "student2"},
+// 	}
+// 	err := store.AddTeacherStudents(context.Background(), arg)
+// 	require.Error(t, err)
+// }
 
 func TestGetTeachersStudents(t *testing.T) {
 	store := NewStore(testDB)
-	arg := AddTeacherStudentsParams{
-		Teacher: "teacher3",
-		Students: []string{"student3", "student4"},
-	}
-	err := store.AddTeacherStudents(context.Background(), arg)
-	require.NoError(t, err)
-
+	teacherTwoStudent := CreateRandomTeacherTwoStudent(t)
 	tests := []struct {
 		name    string
 		teacher string
@@ -34,8 +51,8 @@ func TestGetTeachersStudents(t *testing.T) {
 	}{
 		{
 			name:    "valid",
-			teacher: "teacher3",
-			want:    []string{"student3", "student4"},
+			teacher: teacherTwoStudent.Teacher,
+			want:    []string{teacherTwoStudent.Students[0], teacherTwoStudent.Students[1]},
 		},
 		{
 			name:    "invalid",
@@ -49,7 +66,20 @@ func TestGetTeachersStudents(t *testing.T) {
 			teacher_arr = append(teacher_arr, tt.teacher)
 			got, err := store.GetTeachersStudents(context.Background(), teacher_arr)
 			require.NoError(t, err)
-			require.Equal(t, tt.want, got.Students)
+			if (got.Students == nil){
+				require.Equal(t, tt.want, got.Students)
+				return
+			}
+			require.Contains(t, tt.want, got.Students[0])
+			require.Contains(t, tt.want, got.Students[1])
 		})
 	}
+}
+
+func TestGetTeachersStudentsTwoInvalidTeachers(t *testing.T) {
+	store := NewStore(testDB)
+	teacher_arr := []string{"teacher5", "teacher6"}
+	got, err := store.GetTeachersStudents(context.Background(), teacher_arr)
+	require.NoError(t, err)
+	require.Equal(t, []string(nil), got.Students)
 }

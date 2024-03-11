@@ -27,6 +27,24 @@ func TestAddTeacherStudent(t *testing.T) {
 	CreateRandomTeacherStudent(t)
 }
 
+func TestAddTeacherStudentDuplicate(t *testing.T) {
+	teacher := CreateRandomTeacherStudent(t)
+	err := testQueries.AddTeacherStudent(context.Background(), AddTeacherStudentParams{
+		Teacher: teacher.Teacher,
+		Student: teacher.Student,
+	})
+	require.Error(t, err)
+}
+// cannot test because there is no required tag in the struct
+// func TestAddTeacherStudentInvalidTeacher(t *testing.T) {
+// 	arg := AddTeacherStudentParams{
+// 		Teacher: "",
+// 		Student: util.RandomEmail(),
+// 	}
+// 	err := testQueries.AddTeacherStudent(context.Background(), arg)
+// 	require.Error(t, err)
+// }
+
 
 func TestGetTeacherStudents(t *testing.T) {
 	teacher := CreateRandomTeacherStudent(t)
@@ -36,15 +54,9 @@ func TestGetTeacherStudents(t *testing.T) {
 	require.Contains(t, students, teacher.Student)
 }
 
-func TestGetTeachersStudent(t *testing.T) {
-	teacher := CreateRandomTeacherStudent(t)
-	var teacher_arr []string
-	teacher_arr = append(teacher_arr, teacher.Teacher)
-	require.NotEmpty(t, teacher.Teacher)
-	student, err := testQueries.GetTeachersStudents(context.Background(), teacher_arr)
+func TestGetTeacherStudentsNoStudents(t *testing.T) {
+	teacher := util.RandomEmail()
+	students, err := testQueries.GetTeacherStudents(context.Background(), teacher)
 	require.NoError(t, err)
-	require.NotEmpty(t, student)
-	require.Equal(t, teacher.Student, student[0])
-
-
+	require.Empty(t, students)
 }

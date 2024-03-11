@@ -22,7 +22,7 @@ func (server *Server) addSuspension(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "student suspended successfully"})
+	ctx.JSON(http.StatusNoContent, gin.H{"message": "student suspended successfully"})
 }
 
 func (server *Server) getSuspendedStudents(ctx *gin.Context) {

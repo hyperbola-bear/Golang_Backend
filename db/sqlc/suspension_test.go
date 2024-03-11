@@ -20,6 +20,12 @@ func TestAddSuspension(t *testing.T) {
 	CreateSuspendedStudent(t)
 }
 
+// cannot test because there is no required tag in the struct
+// func TestAddSuspensionInvalidStudent(t *testing.T) {
+// 	err := testQueries.AddSuspension(context.Background(), "")
+// 	require.Error(t, err)
+// }
+
 func TestGetSuspendedStudents(t *testing.T) {
 	student := CreateSuspendedStudent(t)
 
