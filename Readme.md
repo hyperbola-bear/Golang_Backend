@@ -48,7 +48,9 @@ This an API created using Golang for Govtech take-home assignment. I've included
 
 ### Register `GET`
 registers student(s) to a teacher
+
 `http://localhost:8080/api/register`
+
 sample payload:
 ```
 {
